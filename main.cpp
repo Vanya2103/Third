@@ -3,8 +3,10 @@
 #include <QVBoxLayout>
 #include <QLineEdit>
 #include <QPushButton>
-#include <QLabel>
+#include <QListView>
+#include <QStringListModel>
 #include <QRegularExpression>
+#include <QRegularExpressionMatch>
 
 bool isValidEmail(const QString& email) {
     QRegularExpression pattern(R"(^[\w.%+-]+@[\w.-]+\.[A-Za-z]{2,}$)");
@@ -20,15 +22,17 @@ public:
         QVBoxLayout *layout = new QVBoxLayout(this);
 
         emailInput = new QLineEdit(this);
-        emailInput->setPlaceholderText("Введите электронную почту");
+        emailInput->setPlaceholderText("Введите email");
 
-        validateButton = new QPushButton("Validate", this);
+        validateButton = new QPushButton("Проверить", this);
 
-        resultLabel = new QLabel(this);
+        emailListView = new QListView(this);
+        emailListModel = new QStringListModel(this);
+        emailListView->setModel(emailListModel);
 
         layout->addWidget(emailInput);
         layout->addWidget(validateButton);
-        layout->addWidget(resultLabel);
+        layout->addWidget(emailListView);
 
         connect(validateButton, &QPushButton::clicked, this, &EmailValidatorWidget::validateEmail);
     }
@@ -37,23 +41,28 @@ private slots:
     void validateEmail() {
         QString email = emailInput->text();
         if (isValidEmail(email)) {
-            resultLabel->setText("Корректный адрес электронной почты.");
+            emailListModel->insertRow(emailListModel->rowCount());
+            QModelIndex index = emailListModel->index(emailListModel->rowCount() - 1);
+            emailListModel->setData(index, email + " - Верный");
         } else {
-            resultLabel->setText("Некорректный адрес электронной почты.");
+            emailListModel->insertRow(emailListModel->rowCount());
+            QModelIndex index = emailListModel->index(emailListModel->rowCount() - 1);
+            emailListModel->setData(index, email + " - Неверный");
         }
     }
 
 private:
     QLineEdit *emailInput;
     QPushButton *validateButton;
-    QLabel *resultLabel;
+    QListView *emailListView;
+    QStringListModel *emailListModel;
 };
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
 
     EmailValidatorWidget widget;
-    widget.setWindowTitle("Email Validator");
+    widget.setWindowTitle("Проверятель");
     widget.show();
 
     return app.exec();
